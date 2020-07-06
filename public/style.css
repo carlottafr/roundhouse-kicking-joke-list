@@ -1,0 +1,26 @@
+* {
+    font-family: monospace;
+}
+
+body {
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: #000;
+}
+
+h1 {
+    font-size: 6em;
+}
+
+p {
+    font-size: 1.5em;
+}
+
+footer {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+}

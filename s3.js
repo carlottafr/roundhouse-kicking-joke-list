@@ -14,8 +14,11 @@ const s3 = new aws.S3({
     secretAccessKey: secrets.AWS_SECRET,
 });
 
-exports.upload = async (filePath) => {
-    const fileBody = fs.readFileSync(filePath);
+exports.upload = async (path) => {
+    // Get the csv body
+    const fileBody = fs.readFileSync(path);
+    // Generate a random file name for individual
+    // file uploads
     let fileName = cryptoRandomString({
         length: 12,
     });
@@ -26,15 +29,16 @@ exports.upload = async (filePath) => {
         Body: fileBody,
         ContentType: "text/csv",
     };
-    s3.upload(params, (err, data) => {
-        if (err) {
-            throw err;
-        }
-        // Serve the link:
-        console.log("Link to file: ", data.Location);
+    // Invoke s3.upload as a promise
+    let uploadPromise = s3.upload(params).promise();
+    try {
+        let { Location } = await uploadPromise;
         // Delete the file:
-        fs.unlink(filePath, () => {
+        fs.unlink(path, () => {
             console.log("File has been removed!");
         });
-    });
+        return Location;
+    } catch (err) {
+        throw err;
+    }
 };

@@ -12,13 +12,13 @@ exports.httpsRequest = (url) => {
                 // access the value-key
                 joke += JSON.parse(data).value;
             });
+            res.on("error", (err) => {
+                console.log("Error: ", err);
+                reject(err);
+            });
             res.on("end", () => {
                 resolve(joke);
             });
-        });
-        request.on("error", (err) => {
-            console.log("Error: ", err);
-            reject(err);
         });
         request.end();
     });

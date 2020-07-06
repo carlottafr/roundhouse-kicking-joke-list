@@ -1,18 +1,23 @@
-// I use the filesystem module to read, write
-// and append the csv file locally
+// These are my server setup variables
 
-const fs = require("fs");
+const express = require("express");
+const app = express();
 
-// I use csvtojson to parse the existing csv
-// data so that I can loop through it to prevent
-// double entries
-
-const csv = require("csvtojson");
-
-// Import functions that I'll need:
+// These are my imported functions
 
 const { upload } = require("./s3");
 const { httpsRequest } = require("./request");
+
+// I use fs for creating, reading,
+// appending and deleting the csv file
+
+const fs = require("fs");
+
+// I use csvtojson to read and convert
+// the csv data to JSON to check for
+// double entries
+
+const csv = require("csvtojson");
 
 // This function looks for double entries.
 // It is passed the string that was received
@@ -90,6 +95,8 @@ const addingJokesToCsv = async (path, string) => {
 
 const path = __dirname + "/roundhouse-kicks-of-jokes.csv";
 
+// This is where my app logic comes together:
+
 const operationWorldSavingJokes = async (url) => {
     try {
         for (let i = 0; i <= 100; i++) {
@@ -108,12 +115,86 @@ const operationWorldSavingJokes = async (url) => {
                 i--;
             }
         }
-        // Here I finally upload the world-saving file via S3
-        await upload(path);
         console.log("Done with operationWorldSavingJokes!");
     } catch (err) {
         console.log("Error in operationWorldSavingJokes: ", err);
     }
 };
 
-operationWorldSavingJokes("https://api.chucknorris.io/jokes/random");
+// I make the content of the public dir
+// available (the css file)
+
+app.use(express.static("./public"));
+
+// The HTML code I serve with each GET request
+
+const htmlCode = (body) => {
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>
+                Save The World With Chuck Norris
+            </title>
+            <link rel="stylesheet" href="/style.css">
+        </head>
+        <body>
+            ${body}
+            <footer>
+                &copy; Carlotta Frommer 2020
+            </footer>
+        </body>
+        </html>
+        `;
+};
+
+// GET / route
+
+app.get("/", (req, res) => {
+    let html = htmlCode(
+        `<h1>Save the world ...</h1>
+        <p>... with classic Chuck Norris jokes!</p>
+        <p>Click <a href="/save-the-world"><strong>here</strong></a> and wait a little to get the jokes!</p>`
+    );
+    res.end(html);
+});
+
+// GET /save-the-world route
+
+app.get("/save-the-world", async (req, res) => {
+    try {
+        await operationWorldSavingJokes(
+            "https://api.chucknorris.io/jokes/random"
+        );
+        let html = htmlCode(
+            `
+            <h1>Almost there ...</h1>
+            <p>The worldsaving jokes are in preparation. Are you ready for the roundhouse kicks?</p>
+            <p>Click <a href="/download"><strong>here</strong></a> to get to the final step!</p>
+            `
+        );
+        res.end(html);
+    } catch (err) {
+        console.log("Error in get /save-the-world: ", err);
+    }
+});
+
+// GET /download route
+
+app.get("/download", async (req, res) => {
+    try {
+        let link = await upload(path);
+        let html = htmlCode(
+            `
+            <h1>Here come the jokes</h1>
+            <img src="https://media3.giphy.com/media/BIuuwHRNKs15C/200.gif" />
+            <p>Click <a href="${link}"><strong>here</strong></a> to download the joke file!</p>
+            `
+        );
+        res.end(html);
+    } catch (err) {
+        console.log("Error in get /download: ", err);
+    }
+});
+
+app.listen(8080, () => console.log("Express server is at your service!"));
