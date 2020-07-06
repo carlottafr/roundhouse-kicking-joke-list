@@ -169,7 +169,7 @@ app.get("/save-the-world", async (req, res) => {
         let html = htmlCode(
             `
             <h1>Almost there ...</h1>
-            <p>The worldsaving jokes are in preparation. Are you ready for the roundhouse kicks?</p>
+            <p>The world-saving jokes are in preparation. Are you ready for the roundhouse kicks?</p>
             <p>Click <a href="/download"><strong>here</strong></a> to get to the final step!</p>
             `
         );
